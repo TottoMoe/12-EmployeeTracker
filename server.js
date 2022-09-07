@@ -248,7 +248,7 @@ function updateEmployee() {
         .then(function(answer){
           const useName = answer.choice;
 
-          db.query("SELECT * FROM role",
+          db.query("SELECT * FROM employee",
             function(err, results){
               if(err) throw err;
             inquirer
@@ -259,7 +259,7 @@ function updateEmployee() {
                 choices: function(){
                   let choiceArr = [];
                   for (i = 0; i < results.length; i++) {
-                    choiceArr.push(results[i].title)
+                    choiceArr.push(results[i].role_id)
                   }
                   return choiceArr;
                 },

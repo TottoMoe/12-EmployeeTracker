@@ -25,14 +25,13 @@ The user should clone the repository from GitHub and download Node.js. This appl
 ## Usage Information
   
 Use inquirer from your command line to answer questions and use MySql to run the table and see the employees data information.
-[Usage Video](https://drive.google.com/file/d/1949DGPVMEg2bCuqlDniOBRGxNFKF3F_l/view)
-WebURL: https://fierce-tundra-85628.herokuapp.com/
+[Usage Video](https://drive.google.com/file/d/1402jgU8b-H5zCgoR3QFteuyEGeDPL67w/view)
 ***
 
 <a name="test"></a>
 ## Test ScreenShot
-![Screen-Shot1](./ScreenShot1.png)
-![Screen-Short](./ScreenShot2.png)
+![Screen-Shot](./ScreenShot%20.png)
+
 
 <a name="questions"></a>
 ## Questions
