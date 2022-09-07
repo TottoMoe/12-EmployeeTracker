@@ -78,7 +78,9 @@ function viewDepartments() {
 
 function viewRoles() {
   db.query(
-    `SELECT role.id, role.title, role.salary, department.name AS Department FROM role LEFT JOIN department ON role.department_id = department.id;`,
+    `SELECT role.id, role.title, role.salary, department.name AS Department 
+    FROM role 
+    LEFT JOIN department ON role.department_id = department.id;`,
     function (err, results) {
       if (err) throw err;
       console.table(results);
@@ -88,22 +90,25 @@ function viewRoles() {
 }
 
 function viewEmployees() {
-  db.query(`SELECT 
+  db.query(
+    `SELECT 
     employee.id, 
     employee.first_name AS First_Name, 
     employee.last_name AS Last_Name,
     role.title AS Title,
-      role.department_id AS Department,
+      department.name AS Department,
       role.salary AS salary,
-      employee.manager_id AS Manager
+      CONCAT(manager.first_name, ' ', manager.last_name) AS Manager
   FROM employee
   LEFT JOIN role ON employee.role_id = role.id
-  LEFT JOIN department on role.department_id = department.id;`, 
-  function (err, results) {
-    if (err) throw err;
-    console.table(results);
-    promptInit();
-  });
+  LEFT JOIN department on role.department_id = department.id
+  LEFT JOIN employee manager on manager.id = employee.manager_id`,
+    function (err, results) {
+      if (err) throw err;
+      console.table(results);
+      promptInit();
+    }
+  );
 }
 
 function addDepartment() {
@@ -137,17 +142,6 @@ function addRole() {
         message: "Enter a role title:",
       },
       {
-        name: "salary",
-        type: "number",
-        message: "Enter the role salary",
-        validate: function (value) {
-          if (isNaN(value) === false) {
-            return true;
-          }
-          return false;
-        },
-      },
-      {
         name: "department_id",
         type: "number",
         message: "Enter department id",
@@ -158,15 +152,22 @@ function addRole() {
           return false;
         },
       },
+      {
+        name: "salary",
+        type: "number",
+        message: "Enter the role salary",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        },
+      },
     ])
     .then(function (answer) {
       db.query(
-        "INSERT INTO role SET ?",
-        {
-          title: answer.role,
-          salary: answer.salary,
-          department_id: answer.department_id,
-        },
+        "INSERT INTO role (title, department_id, salary) VALUES (?, ?, ?)",
+        [answer.role, answer.department_id, answer.salary],
         function (err) {
           if (err) throw err;
           console.log("Emoloyee Roles added " + answer.role);
@@ -176,8 +177,125 @@ function addRole() {
     });
 }
 
-function addEmployee() {}
+function addEmployee() { 
+  inquirer
+    .prompt([
+      {
+        name: "first_name",
+        type: "input",
+        message: "What is the first name?",
+      },
+      {
+        name: "last_name",
+        type: "input",
+        message: "What is the last name?",
+      },
+      {
+        name: "role_id",
+        type: "number",
+        message: "What is the role id?",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        },
+      },
+      {
+        name: "manager_id",
+        type: "number",
+        message: "What is the manager id?",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        },
+      },
+    ])
+    .then(function (answer) {
+      db.query(
+        "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
+        [answer.first_name, answer.last_name, answer.role_id, answer.manager_id],
+        function (err) {
+          if (err) throw err;
+          console.log("New emoloyee added " + answer.employee);
+          promptInit();
+        }
+      );
+    });
+}
 
-function updateEmployee() {}
+function updateEmployee() {
+  db.query("SELECT * FROM employee",
+    function(err, results){
+      if(err) throw err;
+      inquirer
+        .prompt([
+          {
+            name: "choice",
+            type: "rawlist",
+            choices: function(){
+              let choiceArr = [];
+              for(i = 0; i < results.length; i++) {
+                choiceArr.push(results[i].last_name);
+              }
+              return choiceArr;
+            },
+            message: "Select employee to update"
+          }
+        ])
+        .then(function(answer){
+          const useName = answer.choice;
 
-function exit() {}
+          db.query("SELECT * FROM role",
+            function(err, results){
+              if(err) throw err;
+            inquirer
+            .prompt([
+              {
+                name: "role",
+                type: "rawlist",
+                choices: function(){
+                  let choiceArr = [];
+                  for (i = 0; i < results.length; i++) {
+                    choiceArr.push(results[i].title)
+                  }
+                  return choiceArr;
+                },
+                message: "Select the role title"
+              },
+              {
+                name: "manager",
+                type: "number",
+                validate: function(value){
+                  if(isNaN(value) === false){
+                    return true;
+                  }
+                  return false;
+                },
+                message: "Enter the manager ID",
+                default: "1"
+              }
+              ]).then(function(answer){
+                console.log(answer);
+                console.log(useName);
+                db.query("UPDATE employee SET ? WHERE last_name = ?",
+                [
+                  {
+                    role_id:answer.role,
+                    manager_id:answer.manager
+                  }, useName
+                ],
+                ),
+                console.log("Emoloyee updated");
+                promptInit();
+              })
+            })
+        })
+    })
+}
+
+function exit() {
+  console.log("Program Done!");
+}
